@@ -20,7 +20,7 @@ class Node(BaseNode):
             self.parent.appendChild(self)
         else:
             self.level = 0
-        self.children = []
+        self.children = set()
 
     def __str__(self):
         paths = [self.path, ]
@@ -36,6 +36,9 @@ class Node(BaseNode):
             raise ValueError("two operands' parent not equal")
         return cmp(self.path,  other.path)
 
+    def __eq__(self, other):
+        return str(self) == str(other)
+
     def isRoot(self):
         return self.parent is None
 
@@ -44,10 +47,15 @@ class Node(BaseNode):
             yield node
 
     def appendChild(self, node):
-        self.children.append(node)
+        self.children.add(node)
+
+    def extendChild(self, nodes):
+        if isinstance(nodes, set):
+            nodes = set(nodes)
+        self.children = self.children.union(nodes)
 
     def display(self):
-        self.out.write( "    " * self.level + self.path + '\n')
+        self.out.write("    " * self.level + self.path + '\n')
 
 
 def stripUrl(url):
@@ -90,6 +98,26 @@ def displayAll(node):
         displayAll(child)
 
 
+def nodeToDict(node):
+    """map node and its children to a map, use node's full paths as keys"""
+    # TODO: it seems to have no use at all. Leave it here to solve it later.
+    path_dict = {}
+    path_dict[str(node)] = node
+    for child in node.iterChildren():
+        path_dict.update(iterMapDict(child))
+    return path_dict
+
+def mapNodesDict(nodes):
+    path_dict = {}
+    for node in nodes:
+        _key = str(node)
+        if _key in path_dict:
+            path_dict[_key].extendChild(node.children)
+        else:
+            path_dict[_key] = node
+    return path_dict
+
+
 def main():
     url = 'http://1/2/3'
     root = splitPath(url)
@@ -97,7 +125,13 @@ def main():
     node1 = Node('/5', node)
     node2 = Node('/6', node)
     displayAll(root)
-    # next, give a bunch of urls of the same netloc, display them right.
+    urls = []
+    nodes = []
+    for url in urls:
+        nodes.append( splitPath(url))
+    path_dict = mapNodesDict(nodes)
+    displayAll(path_dict['root'])
+    # next, try to remove the duplicated ones
 
 
 if __name__ == '__main__':
