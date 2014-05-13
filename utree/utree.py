@@ -60,8 +60,6 @@ class Node(BaseNode):
 
 def stripUrl(url):
     """Parse url to remove query parameters and fragment."""
-    import pdb
-    # pdb.set_trace()
     url = url.strip()
     if not url.startswith('http://') and not url.startswith('https://'):
         url = 'http://' + url
@@ -98,15 +96,6 @@ def displayAll(node):
         displayAll(child)
 
 
-def nodeToDict(node):
-    """map node and its children to a map, use node's full paths as keys"""
-    # TODO: it seems to have no use at all. Leave it here to solve it later.
-    path_dict = {}
-    path_dict[str(node)] = node
-    for child in node.iterChildren():
-        path_dict.update(iterMapDict(child))
-    return path_dict
-
 def mapNodesDict(nodes):
     path_dict = {}
     for node in nodes:
@@ -119,18 +108,15 @@ def mapNodesDict(nodes):
 
 
 def main():
-    url = 'http://1/2/3'
-    root = splitPath(url)
-    node = Node('/4', root)
-    node1 = Node('/5', node)
-    node2 = Node('/6', node)
-    displayAll(root)
     urls = []
+    with open('../../urls.txt') as fin:
+        urls = fin.readlines()
     nodes = []
     for url in urls:
-        nodes.append( splitPath(url))
+        nodes.append(splitPath(url))
     path_dict = mapNodesDict(nodes)
-    displayAll(path_dict['root'])
+    for value in path_dict.values():
+        displayAll(value)
     # next, try to remove the duplicated ones
 
 
