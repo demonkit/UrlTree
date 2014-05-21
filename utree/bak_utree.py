@@ -10,6 +10,55 @@ class BaseNode(object):
     out = sys.stdout
 
 
+class NodeSet(object):
+
+    def __init__(self, nodes=None):
+        self._node_dict = {}
+        if nodes is not None:
+            self.__initNodes(nodes)
+
+    def __initNodes(self, nodes):
+        for node in nodes:
+            node_str = str(node)
+            if node_str not in self._node_dict:
+                self._node_dict[node_str] = node
+
+    def __contains__(self, node):
+        return str(node) in self._node_dict
+
+    def __iter__(self):
+        for node in self._node_dict.itervalues():
+            yield node
+
+    def _add(self, node):
+        self._node_dict[str(node)] = node
+
+    def _delete(self, node):
+        del self._node_dict[str(node)]
+
+    def __unionChild(self, node):
+        for child in node.children:
+            if child not in self:
+                self._add(node)
+
+    def add(self, node):
+        if node not in self:
+            self._add(node)
+        else:
+            # if node already in the set, we should handle its children
+            self.__unionChild(node)
+
+    def delete(self, node):
+        if node not in self:
+            self._delete(node)
+
+    def union(self, nodes):
+        for node in nodes:
+            node_str = str(node)
+            if node not in self:
+                self._add(node)
+
+
 class Node(BaseNode):
 
     def __init__(self, path, parent=None):
@@ -20,7 +69,10 @@ class Node(BaseNode):
             self.parent.appendChild(self)
         else:
             self.level = 0
-        self.children = set()
+        # print '======================================='
+        # self.children = NodeSet()
+        # print self.children
+        # print '======================================='
 
     def setOupputStream(self, output):
         self.out = output
@@ -53,8 +105,8 @@ class Node(BaseNode):
         self.children.add(node)
 
     def extendChild(self, nodes):
-        if not isinstance(nodes, set):
-            nodes = set(nodes)
+        if not isinstance(nodes, NodeSet):
+            nodes = NodeSet(nodes)
         self.children = self.children.union(nodes)
 
     def display(self):
@@ -103,6 +155,8 @@ def mapNodesDict(nodes):
     path_dict = {}
     for node in nodes:
         _key = str(node)
+        print node.children
+        continue
         if _key in path_dict:
             path_dict[_key].extendChild(node.children)
         else:
@@ -112,7 +166,7 @@ def mapNodesDict(nodes):
 
 def main():
     urls = []
-    with open('../../urls.txt') as fin:
+    with open('../../u.txt') as fin:
         urls = fin.readlines()
     nodes = []
     for url in urls:
